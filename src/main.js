@@ -5,6 +5,7 @@ import chalk from "chalk";
 import axios from "axios";
 import FormData from "form-data";
 
+import config from "../markist.config";
 const delimiter = "-->";
 
 export async function createConfig(options) {
@@ -25,9 +26,6 @@ export async function createConfig(options) {
 }
 
 export async function syncFiles(options) {
-  const config = JSON.parse(fs.readFileSync("./markist.config.json", "utf8"));
-  console.log(config, "--- config");
-
   if (!config) {
     console.log("No Markist config found");
     return;
@@ -36,6 +34,7 @@ export async function syncFiles(options) {
   // get root directory
   const root = path.basename(path.dirname("../"));
   const todoFiles = glob.sync(`${config.source}`);
+
   console.log(chalk.green(delimiter), `Found ${todoFiles.length} files`);
 
   todoFiles.forEach(async (file) => {
@@ -51,7 +50,7 @@ export async function syncFiles(options) {
     try {
       console.log(chalk.green(delimiter), `Uploading: ${title}`);
 
-      await axios.post("http://localhost:4000/api/upload", form, {
+      const resp = await axios.post("http://localhost:4000/api/upload", form, {
         headers: {
           ...form.getHeaders(),
         },
@@ -61,7 +60,7 @@ export async function syncFiles(options) {
         return "Upload complete";
       }
     } catch (err) {
-      return new Error(err.message);
+      return console.log(chalk.red(delimiter), `An error occurred: ${err}`);
     }
   });
 }
